@@ -1,0 +1,166 @@
+====================================================================================================
+https://www.digitalocean.com/community/tutorials/how-to-set-up-django-with-postgres-nginx-and-gunicorn-on-ubuntu-18-04
+====================================================================================================
+
+passwd (set a new root password)
+adduser yetkin (same root password can be used)
+apt-get install sudo
+usermod -a -G sudo yetkin
+In '/etc/ssh/sshd_config'
+    PermitRootLogin yes -> PermitRootLogin no
+    Add 'AllowUsers yetkin' to the end
+cp -r ~/.ssh /home/yetkin
+chown yetkin:yetkin /home/yetkin/.ssh
+service ssh restart
+exit
+
+ssh yetkin@ekitap.yetkin.com.tr
+
+sudo apt update
+
+sudo apt install git
+
+
+
+
+
+
+sudo apt install software-properties-common
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt install python3.7
+python3.7 --version
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.7 1
+sudo apt install python3-venv
+sudo apt install python3-pip
+sudo apt install python3.7-dev
+sudo apt install gettext
+
+python3.7 -m venv django-venv
+source ~/django-venv/bin/activate
+pip install uwsgi
+
+cd ~/.ssh
+ssh-keygen -t rsa -b 4096 -C "admin@yetkin.com.tr"
+ssh-add id_rsa
+cd
+git clone git clone git@bitbucket.org:umutgulkok/epublisher.git
+cd epublisher/server
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py compilemessages
+python manage.py collectstatic --settings=epublisher.settings.prod
+
+test with python manage.py runserver --settings=epublisher.settings.prod 0.0.0.0:80
+test with uwsgi --http :8000 --module epublisher.wsgi
+
+
+
+
+
+
+cd
+deactivate
+sudo vi /etc/systemd/system/gunicorn.socket
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[Unit]
+Description=gunicorn socket
+
+[Socket]
+ListenStream=/run/gunicorn.sock
+
+[Install]
+WantedBy=sockets.target
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+sudo vi /etc/systemd/system/gunicorn.service
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[Unit]
+Description=gunicorn daemon
+Requires=gunicorn.socket
+After=network.target
+
+[Service]
+User=yetkin
+Group=www-data
+WorkingDirectory=/home/yetkin/epublisher/server/
+ExecStart=/home/yetkin/django-venv/bin/gunicorn \
+          --error-logfile - \
+          --access-logfile - \
+          --workers 3 \
+          --bind unix:/run/gunicorn.sock \
+          epublisher.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+sudo systemctl reload gunicorn.socket
+sudo systemctl start gunicorn.socket
+sudo systemctl enable gunicorn.socket
+
+You can test the socker with:
+    sudo systemctl status gunicorn.socket
+    file /run/gunicorn.sock
+    sudo journalctl -u gunicorn.socket
+You should see some html with this:
+    curl --unix-socket /run/gunicorn.sock localhost
+Now the service has been activated, you should see the workers:
+    sudo systemctl status gunicorn
+
+
+
+
+
+cd
+sudo apt-get install nginx
+sudo vi /etc/nginx/sites-available/epublisher_nginx.conf
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+server {
+    listen      80;
+    server_name ekitap.yetkin.com.tr;
+    charset     utf-8;
+
+    client_max_body_size 75M;
+
+    location /static {
+        alias /home/yetkin/static;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/run/gunicorn.sock;
+    }
+}
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+sudo ln -s /etc/nginx/sites-available/epublisher_nginx.conf /etc/nginx/sites-enabled
+sudo nginx -t
+sudo systemctl restart nginx
+
+
+
+
+
+sudo apt install ufw
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow ssh
+sudo ufw allow https
+sudo ufw allow http
+sudo ufw enable
+
+
+
+
+====================================================================================================
+https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-18-04
+====================================================================================================
+
+sudo rm /usr/bin/python3
+sudo ln -s python3.6 /usr/bin/python3
+
+sudo add-apt-repository ppa:certbot/certbot
+sudo apt install python-certbot-nginx
+
+sudo certbot --nginx -d ekitap.yetkin.com.tr

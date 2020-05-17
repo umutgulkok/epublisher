@@ -1,0 +1,25 @@
+{
+  "name": "ebook",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon ./index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  },
+  "dependencies": {
+    "epubjs": "^0.3.85",
+    "jsdom": "^16.2.2",
+    "mime": "^2.4.4",
+    "rimraf": "^3.0.2",
+    "unzipper": "^0.10.10",
+    "uuid": "^7.0.3",
+    "xmlhttprequest": "^1.8.0"
+  }
+}

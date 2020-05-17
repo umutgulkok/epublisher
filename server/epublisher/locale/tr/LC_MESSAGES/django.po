@@ -1,0 +1,137 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-05-16 17:29+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: epublisher/admin/site.py:16
+msgid "Administration"
+msgstr "Yönetim"
+
+#: epublisher/book/admin.py:26 epublisher/book/admin.py:55
+#: epublisher/book/models.py:22 epublisher/deviceauth/models.py:13
+msgid "Name"
+msgstr "Ad"
+
+#: epublisher/book/admin.py:31 epublisher/book/admin.py:60
+#: epublisher/book/models.py:23
+msgid "Author"
+msgstr "Yazar"
+
+#: epublisher/book/admin.py:36 epublisher/book/admin.py:65
+#: epublisher/book/apps.py:7 epublisher/book/models.py:30
+#: epublisher/book/models.py:60 epublisher/book/models.py:87
+msgid "Book"
+msgstr "Kitap"
+
+#: epublisher/book/helpers.py:37
+#, python-brace-format
+msgid "File size limit: {1}. Current file size: {2}"
+msgstr "Dosya boyutu limiti: {1}. Seçilen dosya boyutu: {2}"
+
+#: epublisher/book/helpers.py:40
+msgid "File type not supported"
+msgstr "Desteklenmeyen dosya türü"
+
+#: epublisher/book/models.py:21
+msgid "ISBN"
+msgstr "ISBN"
+
+#: epublisher/book/models.py:24
+msgid "Publisher"
+msgstr "Yayınevi"
+
+#: epublisher/book/models.py:25
+msgid "Active"
+msgstr "Aktif"
+
+#: epublisher/book/models.py:26
+msgid "Date Published"
+msgstr "Yayınlanma Tarihi"
+
+#: epublisher/book/models.py:27 epublisher/book/models.py:67
+#: epublisher/book/models.py:88
+msgid "Date Added"
+msgstr "Eklenme Tarihi"
+
+#: epublisher/book/models.py:31
+msgid "Books"
+msgstr "Kitaplar"
+
+#: epublisher/book/models.py:61
+msgid "Image File"
+msgstr "Resim Dosyası"
+
+#: epublisher/book/models.py:64
+msgid "Epub File"
+msgstr "Epub Dosyası"
+
+#: epublisher/book/models.py:70
+msgid "Book Content"
+msgstr "Kitap İçeriği"
+
+#: epublisher/book/models.py:71
+msgid "Book Contents"
+msgstr "Kitap İçerikleri"
+
+#: epublisher/book/models.py:86 epublisher/deviceauth/models.py:19
+msgid "User"
+msgstr "Kullanıcı"
+
+#: epublisher/book/models.py:91
+msgid "Ownership"
+msgstr "Sahiplik Kaydı"
+
+#: epublisher/book/models.py:92
+msgid "Ownerships"
+msgstr "Sahiplik Kayıtları"
+
+#: epublisher/deviceauth/apps.py:7
+msgid "User Devices"
+msgstr "Kullanıcı Cihazları"
+
+#: epublisher/deviceauth/models.py:11
+msgid "Auth Token"
+msgstr "Yetki Anahtarı"
+
+#: epublisher/deviceauth/models.py:12
+msgid "Fingerprint"
+msgstr "Parmakizi"
+
+#: epublisher/deviceauth/models.py:14
+msgid "OS"
+msgstr "İşletim Sistemi"
+
+#: epublisher/deviceauth/models.py:15
+msgid "Type"
+msgstr "Tür"
+
+#: epublisher/deviceauth/models.py:22
+msgid "Date Created"
+msgstr "Oluşturma Tarihi"
+
+#: epublisher/deviceauth/models.py:25 epublisher/deviceauth/models.py:26
+msgid "User Device"
+msgstr "Kullanıcı Cihazı"
+
+#: epublisher/settings/base.py:136
+msgid "Turkish"
+msgstr "Türkçe"
+
+#: epublisher/settings/base.py:137
+msgid "English"
+msgstr "İngilizce"

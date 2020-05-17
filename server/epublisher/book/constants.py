@@ -1,0 +1,7 @@
+STORAGE_DIR = 'storage'
+COVER_FILENAME = 'cover.jpg'
+EPUB_FILENAME = 'book.epub'
+LOCATIONS_FILENAME = 'locations.json'
+SEARCH_FILENAME = 'search.json'
+MAX_IMAGE_UPLOAD_SIZE = "2621440"
+MAX_EPUB_UPLOAD_SIZE = "5242880"
