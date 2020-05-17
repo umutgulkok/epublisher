@@ -1,6 +1,6 @@
 # ePUBlisher #
 
-An ePub serving system with DRM
+An ePub publishing and reading platform with DRM
 
 ### Components
 
