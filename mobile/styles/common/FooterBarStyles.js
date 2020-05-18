@@ -6,7 +6,8 @@ const FooterBarStyles = {
         bottom: 0,
         ...Platform.select({
             ios: {
-                height: 64,
+                height: 74,
+                paddingBottom: 10
             },
             android: {
                 height: 54,
@@ -24,15 +25,31 @@ const FooterBarStyles = {
 
 const SliderStyle = {
     height: 30,
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'row',
-        flex: 1,
-        marginLeft: 5,
-        marginRight: 5
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    flex: 1,
+    marginLeft: 25,
+    marginRight: 0
+};
+
+const colors = {
+    'dark': {
+        textColor: '#eee',
+        iconColor: '#3b82f6',
+        backgroundColor: '#121312',
+        sliderThumbColor: '#999'
+    },
+    'light': {
+        textColor: '#111',
+        iconColor: '#3478f5',
+        backgroundColor: '#f3f3f3',
+        sliderThumbColor: '#ffffff'
+    }
 };
 
 export {
     FooterBarStyles,
-    SliderStyle
+    SliderStyle,
+    colors
 }

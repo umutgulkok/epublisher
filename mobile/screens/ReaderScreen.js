@@ -16,7 +16,6 @@ import {PreferenceKeys, initPreferences, readPreference, storePreference} from '
 import {Themes} from '../helpers/Themes';
 import Search from '../components/reader/Search';
 import {getFontOrientationFactor} from '../helpers/Utils';
-import {indexBook} from '../helpers/EpubIndexer';
 import {EpubStreamer} from '../components/epubjs-rn/Streamer';
 import Epub from '../components/epubjs-rn/Epub';
 
@@ -78,21 +77,6 @@ class Reader extends Component {
         setTimeout(() => this.toggleBars(), 1000);
         Orientation.addOrientationListener(this._orientationDidChange);
 
-        // this.unsubscribeConnectionChecker = NetInfo.addEventListener(state => {
-        //     if (!this.state.isConnectedToInternet && state.isConnected && (state.type !== 'wifi' || state.type !== 'cellular')) {
-        //         // Alert.alert('Connected');
-        //         this.setState({
-        //             isConnectedToInternet: true,
-        //         });
-        //     } else if (this.state.isConnectedToInternet && !state.isConnected && state.type === 'none'){
-        //         // Alert.alert('Disconnected');
-        //         this.setState({
-        //             isConnectedToInternet: false,
-        //         });
-        //         this._search.hide();
-        //     }
-        // });
-
         // setInterval(async () => {
         //     const copiedText = await Clipboard.getString();
         //     if (copiedText.length > 200) {
@@ -104,7 +88,6 @@ class Reader extends Component {
     componentWillUnmount() {
         this.streamer.destroy();
         Orientation.removeOrientationListener(this._orientationDidChange);
-        // this.unsubscribeConnectionChecker();
     }
 
     toggleBars() {
@@ -193,9 +176,9 @@ class Reader extends Component {
                     <HeaderBar
                         title={this.state.title}
                         alwaysShown={this.state.showBars}
-                        leftIconName={'ios-list'}
+                        leftIconName={'ios-arrow-back'}
                         rightIconName={'ios-cog'}
-                        onLeftButtonPressed={() => this._nav.show()}
+                        onLeftButtonPressed={() => this.props.navigation.pop()}
                         onRightButtonPressed={() => {
                             this.setState({renderReader: false});
                             this._settings.show();
@@ -217,14 +200,17 @@ class Reader extends Component {
                             const cfi = this.state.book.locations.cfiFromPercentage(percentage);
                             storePreference(`${PreferenceKeys.lastLocation}-${this.state.bookKey}`, cfi);
                         }}
-                        onLeftButtonPressed={() => {
+                        onNavButtonPressed={() => {
+                            this._nav.show()
+                        }}
+                        onSearchButtonPressed={() => {
                             // if (this.state.isConnectedToInternet) {
                             this._search.show()
                             // } else {
                             //     Alert.alert('Arama özelliği internet bağlantısı ile kullanılabilir');
                             // }
                         }}
-                        onRightButtonPressed={() => {
+                        onBookmarkButtonPressed={() => {
                             // this.setState({ renderReader: false });
                             // this._settings.show();
                         }}

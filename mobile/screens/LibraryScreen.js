@@ -40,6 +40,7 @@ class LibraryScreen extends Component {
     }
 
     componentDidMount() {
+        darkModeEventEmitter.setMaxListeners(100);
         darkModeEventEmitter.on('currentModeChanged', this._darkModeChangeHandler.bind(this));
 
         AsyncStorage.getItem('@deviceAuth', (error, value) => {

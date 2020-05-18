@@ -3,11 +3,22 @@ import {StyleSheet} from 'react-native'
 const SettingsStyles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5'
     },
     content: {
         flex: 1,
     }
-})
+});
 
-export default SettingsStyles
+const colors = {
+    'dark': {
+        backgroundColor: '#121312'
+    },
+    'light': {
+        backgroundColor: '#f3f3f3'
+    }
+};
+
+export {
+    SettingsStyles,
+    colors
+}

@@ -3,8 +3,6 @@ import { StyleSheet } from 'react-native'
 const SettingsRowStyles = StyleSheet.create({
     container: {
         marginBottom: 8,
-        backgroundColor: 'white',
-        shadowColor: "#000",
         shadowOffset: {
             width: 0,
             height: 1,
@@ -25,7 +23,6 @@ const SettingsRowStyles = StyleSheet.create({
         height: 50,
         borderRadius: 1,
         borderBottomWidth: 0.2
-        
     },
     containerInnerSection: {
         flex: 1,
@@ -38,18 +35,16 @@ const SettingsRowStyles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center'
     },
-    text: {
+    textStyle: {
         flex: 6,
         flexDirection: 'row',
         fontSize: 15,
-        color: 'black'
     },
     textSection: {
         flex: 1,
         textAlign: 'left',
         fontSize: 15,
         fontWeight: 'bold',
-        color: 'black',
         paddingLeft: 8
     },
     iconRight: {
@@ -71,6 +66,28 @@ const SettingsRowStyles = StyleSheet.create({
     sliderSt: {
         marginHorizontal: 16
     }
-})
+});
 
-export default SettingsRowStyles
+const colors = {
+    'dark': {
+        textColor: '#eee',
+        iconColor: '#3b82f6',
+        backgroundColor: '#121312',
+        shadowColor: "#fff",
+        borderColor: "#888",
+        sliderThumbColor: '#999'
+    },
+    'light': {
+        textColor: '#111',
+        iconColor: '#3478f5',
+        backgroundColor: '#f3f3f3',
+        shadowColor: "#000",
+        borderColor: "#888",
+        sliderThumbColor: '#ffffff'
+    }
+};
+
+export {
+    SettingsRowStyles,
+    colors
+}

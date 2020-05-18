@@ -1,7 +1,9 @@
 import React, {Component} from 'react'
 import {View, Text} from 'react-native'
+import {initialMode as initialDarkMode} from 'react-native-dark-mode/dist/initial-mode';
+import {eventEmitter as darkModeEventEmitter} from 'react-native-dark-mode/dist/event-emitter';
 
-import SettingsRowStyles from '../../../styles/readerSettings/SettingsRowStyles'
+import {SettingsRowStyles, colors} from '../../../styles/readerSettings/SettingsRowStyles'
 
 const {
     container,
@@ -10,11 +12,33 @@ const {
 } = SettingsRowStyles
 
 class SectionRow extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            darkMode: initialDarkMode
+        };
+    }
+
+    componentDidMount() {
+        darkModeEventEmitter.on('currentModeChanged', this._darkModeChangeHandler.bind(this));
+    }
+
+    componentWillUnmount() {
+        darkModeEventEmitter.removeListener('currentModeChanged', this._darkModeChangeHandler.bind(this));
+    }
+
+    _darkModeChangeHandler(newMode) {
+        this.setState({darkMode: newMode});
+    }
+
     render() {
         return (
-            <View style={container}>
+            <View style={{...container,
+                backgroundColor: colors[this.state.darkMode].backgroundColor,
+                shadowColor: colors[this.state.darkMode].shadowColor}}>
                 <View style={containerSection}>
-                    <Text style={textSection} numberOfLines={1} ellipsizeMode={'tail'}>
+                    <Text style={{...textSection, color: colors[this.state.darkMode].textColor}}
+                          numberOfLines={1} ellipsizeMode={'tail'}>
                         {this.props.text}
                     </Text>
                 </View>

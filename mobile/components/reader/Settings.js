@@ -13,12 +13,16 @@ import ReactNativeSettingsPage, {
     SliderRow
 } from './settings/ReactNativeSettingsPage'
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
+import LocalizedStrings from 'react-native-localization';
+import {initialMode as initialDarkMode} from 'react-native-dark-mode/dist/initial-mode';
+import {eventEmitter as darkModeEventEmitter} from 'react-native-dark-mode/dist/event-emitter';
 
 import {PreferenceKeys, storePreference} from '../../helpers/Preferences';
 import {ThemeKeys} from '../../helpers/Themes';
 import BarButtonStyle from '../../styles/common/BarButtonStyles';
-import {HeaderBarStyles, HeaderBarTitleStyle} from '../../styles/common/HeaderBarStyles';
+import {colors, HeaderBarStyles, HeaderBarTitleStyle} from '../../styles/common/HeaderBarStyles';
 import ModalContainerStyle from '../../styles/common/ModalContainerStyles';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const continuousFlowKey = 'scrolled-continuous';
 const paginatedFlowKey = 'paginated';
@@ -28,6 +32,7 @@ class Settings extends Component {
         super(props);
 
         this.state = {
+            darkMode: initialDarkMode,
             error: '',
             flow: props.flow,
             fontSize: props.fontSize,
@@ -37,11 +42,16 @@ class Settings extends Component {
     }
 
     componentDidMount() {
+        darkModeEventEmitter.on('currentModeChanged', this._darkModeChangeHandler.bind(this));
         if (this.props.shown) {
             this.setState({modalVisible: true});
         } else {
             this.setState({modalVisible: false});
         }
+    }
+
+    componentWillUnmount() {
+        darkModeEventEmitter.removeListener('currentModeChanged', this._darkModeChangeHandler.bind(this));
     }
 
     show() {
@@ -59,9 +69,13 @@ class Settings extends Component {
     }
 
     saveSettings() {
-        storePreference(PreferenceKeys.flow, this.state.flow)
-        storePreference(PreferenceKeys.fontSize, this.state.fontSize)
+        storePreference(PreferenceKeys.flow, this.state.flow);
+        storePreference(PreferenceKeys.fontSize, this.state.fontSize);
         storePreference(PreferenceKeys.theme, this.state.theme)
+    }
+
+    _darkModeChangeHandler(newMode) {
+        this.setState({darkMode: newMode});
     }
 
     render() {
@@ -71,20 +85,23 @@ class Settings extends Component {
                     animationType={'slide'}
                     visible={this.state.modalVisible}
                 >
-                    <View style={styles.header}>
+                    <View style={{...styles.header, backgroundColor: colors[this.state.darkMode].backgroundColor}}>
                         <TouchableOpacity style={styles.backButton}/>
-                        <Text style={styles.headerTitle}>Okuma Ayarları</Text>
+                        <Text style={{
+                            ...styles.headerTitle,
+                            color: colors[this.state.darkMode].textColor
+                        }}>{strings.title}</Text>
                         <TouchableOpacity
                             style={styles.backButton}
                             onPress={() => this.hide()}
                         >
-                            <EvilIcons name="close" size={34}/>
+                            <EvilIcons name="close" size={34} color={colors[this.state.darkMode].iconColor}/>
                         </TouchableOpacity>
                     </View>
                     <View style={styles.container}>
                         <ReactNativeSettingsPage>
                             <SwitchRow
-                                text="  Aşağı Doğru Kaydır"
+                                text={strings.scrolling}
                                 _value={this.state.flow === continuousFlowKey}
                                 _onValueChange={value => {
                                     this.setState({
@@ -93,7 +110,7 @@ class Settings extends Component {
                                 }}
                             />
                             <SliderRow
-                                text="Metin Boyutu"
+                                text={strings.fontSize}
                                 _min={10}
                                 _max={50}
                                 _value={this.state.fontSize}
@@ -103,9 +120,9 @@ class Settings extends Component {
                                     });
                                 }}
                             />
-                            <SectionRow text='Renk Teması'>
+                            <SectionRow text={strings.backgroundTheme}>
                                 <CheckRow
-                                    text='Beyaz Zemin'
+                                    text={strings.lightBackground}
                                     onPressCallback={() => {
                                         this.setState({
                                             theme: ThemeKeys.light
@@ -119,7 +136,7 @@ class Settings extends Component {
                                     _value={this.state.theme === ThemeKeys.light}
                                 />
                                 <CheckRow
-                                    text='Sarı Zemin'
+                                    text={strings.sepiaBackground}
                                     onPressCallback={() => {
                                         this.setState({
                                             theme: ThemeKeys.yellow
@@ -133,7 +150,7 @@ class Settings extends Component {
                                     _value={this.state.theme === ThemeKeys.yellow}
                                 />
                                 <CheckRow
-                                    text='Siyah Zemin'
+                                    text={strings.darkBackground}
                                     onPressCallback={() => {
                                         this.setState({
                                             theme: ThemeKeys.dark
@@ -160,6 +177,18 @@ const styles = StyleSheet.create({
     headerTitle: HeaderBarTitleStyle,
     header: HeaderBarStyles(false, true),
     backButton: BarButtonStyle,
+});
+
+let strings = new LocalizedStrings({
+    en: {
+        lightBackground: 'Light',
+        sepiaBackground: 'Sepia',
+        darkBackground: 'Dark',
+        backgroundTheme: 'Background Theme',
+        fontSize: 'Font Size',
+        scrolling: '  Scrolling',
+        title: 'Reading Preferences'
+    },
 });
 
 export default Settings;
