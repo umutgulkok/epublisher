@@ -11,10 +11,11 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+from os import path
+from pathlib import Path
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
@@ -117,7 +118,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
-LANGUAGE_CODE = 'tr'
+LANGUAGE_CODE = 'en'
 
 TIME_ZONE = 'UTC'
 
@@ -143,19 +144,26 @@ LANGUAGES = (
 
 STATIC_URL = '/static/'
 
-STORAGE_DIR = None
+STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 
-EPUB_STORAGE_DIR = None
-
-STATICFILES_DIRS = [
-    EPUB_STORAGE_DIR,
-]
+####################################################################################################
 
 USER_API_URL = None
 USER_API_USERNAME = None
 USER_API_KEY = None
 
-
 DEVICE_LIMIT = 5
 
-BRAND_NAME = 'Yetkin Hukuk Yayınları - DigiLex'
+BRAND_NAME = 'ePUBlisher'
+
+
+STORAGE_DIR = path.join(
+    Path(os.path.dirname(os.path.realpath(__file__))).parent.parent.absolute(), 'storage')
+
+LOCATIONS_PREPROCESSOR = path.join(
+    Path(os.path.dirname(os.path.realpath(__file__))).parent.parent.parent.absolute(),
+    'preprocessor/locations.js')
+
+SEARCH_PREPROCESSOR = path.join(
+    Path(os.path.dirname(os.path.realpath(__file__))).parent.parent.parent.absolute(),
+    'preprocessor/search.js')

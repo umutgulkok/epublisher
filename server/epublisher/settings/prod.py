@@ -12,3 +12,5 @@ USER_API_KEY = '84gJkcZqqrw31UMT7MwJeyaKEaPYpQdBFcMpGuVanAzx7fzY7YwpOf5ME8sXj3Mw
                'NOWnSoSITsqVC'
 
 ALLOWED_HOSTS = ['ekitap.yetkin.com.tr']
+
+NODEJS_PATH = '/usr/local/bin/node'

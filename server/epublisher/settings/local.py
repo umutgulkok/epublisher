@@ -1,17 +1,6 @@
 from .base import *
-import os
-from os import path
-from pathlib import Path
 
-STORAGE_DIR = path.join(
-    Path(os.path.dirname(os.path.realpath(__file__))).parent.parent.parent.absolute(), 'storage')
-
-# Full-Text Search
-
-# EPUB_STORAGE_DIR = path.join(STORAGE_DIR, 'books')
-EPUB_STORAGE_DIR = '/Users/umutgulkok/Epublisher/storage/books'
-
-STATICFILES_DIRS = [EPUB_STORAGE_DIR, ]
+NODEJS_PATH = '/Users/umutgulkok/.nvm/versions/node/v12.16.2/bin/node'
 
 USER_API_URL = 'https://yetkin.com.tr/index.php?route=api/auth&api_token=1'
 USER_API_USERNAME = 'epublisher'

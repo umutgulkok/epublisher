@@ -1,4 +1,5 @@
 import os
+import time
 
 from django.conf import settings
 from django.db import models
@@ -7,9 +8,9 @@ import uuid
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
-from .helpers import ContentTypeRestrictedFileField
+from .helpers import ContentTypeRestrictedFileField, process_book_content
 from .constants import (
-    COVER_FILENAME, STORAGE_DIR, EPUB_FILENAME, MAX_IMAGE_UPLOAD_SIZE, MAX_EPUB_UPLOAD_SIZE,
+    COVER_FILENAME, STORAGE_DIR_NAME, EPUB_FILENAME, MAX_IMAGE_UPLOAD_SIZE, MAX_EPUB_UPLOAD_SIZE,
 )
 
 
@@ -39,14 +40,14 @@ class Book(models.Model):
 
 
 def image_path(instance, filename):
-    file_name = f'{STORAGE_DIR}/{instance.book.key}/{COVER_FILENAME}'
+    file_name = f'{STORAGE_DIR_NAME}/{instance.book.key}/{COVER_FILENAME}'
     if os.path.exists(file_name):
         os.remove(file_name)
     return file_name
 
 
 def epub_path(instance, filename):
-    file_name = f'{STORAGE_DIR}/{instance.book.key}/{EPUB_FILENAME}'
+    file_name = f'{STORAGE_DIR_NAME}/{instance.book.key}/{EPUB_FILENAME}'
     if os.path.exists(file_name):
         os.remove(file_name)
     return file_name
@@ -66,6 +67,10 @@ class Content(models.Model):
     class Meta:
         verbose_name = _("Book Content")
         verbose_name_plural = _("Book Contents")
+
+    def save(self, *args, **kwargs):
+        process_book_content(self)
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return str(self.book)

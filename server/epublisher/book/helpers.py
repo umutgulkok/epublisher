@@ -1,7 +1,17 @@
+import subprocess
+
 from django.db.models import FileField
 from django.forms import forms
 from django.template.defaultfilters import filesizeformat
 from django.utils.translation import ugettext_lazy as _
+from threading import Thread
+
+from epublisher.settings.local import (
+    STORAGE_DIR, LOCATIONS_PREPROCESSOR, SEARCH_PREPROCESSOR, NODEJS_PATH,
+)
+from .constants import (
+    STORAGE_DIR_NAME, EPUB_FILENAME, LOCATIONS_FILENAME, SEARCH_FILENAME
+)
 
 
 class ContentTypeRestrictedFileField(FileField):
@@ -42,3 +52,16 @@ class ContentTypeRestrictedFileField(FileField):
             pass
 
         return data
+
+
+def process_book_content(content):
+    book_dir = f'{STORAGE_DIR}/{content.book.key}'
+    epub_file_name = f'{book_dir}/{EPUB_FILENAME}'
+    locations_file_name = f'{book_dir}/{LOCATIONS_FILENAME}'
+    search_file_name = f'{book_dir}/{SEARCH_FILENAME}'
+
+    subprocess.Popen([NODEJS_PATH, LOCATIONS_PREPROCESSOR, epub_file_name, locations_file_name],
+                     cwd=book_dir, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    subprocess.Popen([NODEJS_PATH, SEARCH_PREPROCESSOR, epub_file_name, search_file_name],
+                     cwd=book_dir, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

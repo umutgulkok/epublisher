@@ -8,7 +8,7 @@ from epublisher.book.models import Ownership, Book
 from epublisher.book.serializers import BookSerializer
 from epublisher.deviceauth.models import Device
 from .constants import (
-    STORAGE_DIR, COVER_FILENAME, EPUB_FILENAME, SEARCH_FILENAME, LOCATIONS_FILENAME,
+    STORAGE_DIR_NAME, COVER_FILENAME, EPUB_FILENAME, SEARCH_FILENAME, LOCATIONS_FILENAME,
 )
 
 
@@ -16,7 +16,7 @@ def is_book_ready(book):
     if not book.active:
         return False
 
-    book_dir = f'{STORAGE_DIR}/{book.key}'
+    book_dir = f'{STORAGE_DIR_NAME}/{book.key}'
     image_file_name = f'{book_dir}/{COVER_FILENAME}'
     book_file_name = f'{book_dir}/{EPUB_FILENAME}'
     search_file_name = f'{book_dir}/{SEARCH_FILENAME}'
@@ -99,7 +99,7 @@ class BookContentView(APIView):
         if not ownership:
             return Response('Unauthorized', status=401)
 
-        book_dir = f'{STORAGE_DIR}/{book.key}'
+        book_dir = f'{STORAGE_DIR_NAME}/{book.key}'
 
         if content_key == BookContentView.CONTENT_KEY_COVER:
             image_file_name = f'{book_dir}/{COVER_FILENAME}'

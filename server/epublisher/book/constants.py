@@ -1,4 +1,4 @@
-STORAGE_DIR = 'storage'
+STORAGE_DIR_NAME = 'storage'
 COVER_FILENAME = 'cover.jpg'
 EPUB_FILENAME = 'book.epub'
 LOCATIONS_FILENAME = 'locations.json'
