@@ -55,13 +55,15 @@ class SliderRow extends Component {
                         }
                     </View>
                 </View>
-                <Slider
-                    style={sliderSt}
-                    thumbTintColor={colors[this.state.darkMode].sliderThumbColor}
-                    maximumValue={this.props._max}
-                    minimumValue={this.props._min}
-                    value={this.props._value}
-                    onValueChange={this.props._onValueChange}/>
+                <View backgroundColor={colors[this.state.darkMode].backgroundColor}>
+                    <Slider
+                        style={sliderSt}
+                        thumbTintColor={colors[this.state.darkMode].sliderThumbColor}
+                        maximumValue={this.props._max}
+                        minimumValue={this.props._min}
+                        value={this.props._value}
+                        onValueChange={this.props._onValueChange}/>
+                </View>
             </TouchableOpacity>
         )
     }

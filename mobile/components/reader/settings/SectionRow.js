@@ -34,8 +34,7 @@ class SectionRow extends Component {
     render() {
         return (
             <View style={{...container,
-                backgroundColor: colors[this.state.darkMode].backgroundColor,
-                shadowColor: colors[this.state.darkMode].shadowColor}}>
+                backgroundColor: colors[this.state.darkMode].backgroundColor}}>
                 <View style={containerSection}>
                     <Text style={{...textSection, color: colors[this.state.darkMode].textColor}}
                           numberOfLines={1} ellipsizeMode={'tail'}>

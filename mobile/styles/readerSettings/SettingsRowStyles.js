@@ -22,7 +22,7 @@ const SettingsRowStyles = StyleSheet.create({
         flex: 1, 
         height: 50,
         borderRadius: 1,
-        borderBottomWidth: 0.2
+        borderBottomWidth: 0.3
     },
     containerInnerSection: {
         flex: 1,
@@ -72,17 +72,17 @@ const colors = {
     'dark': {
         textColor: '#eee',
         iconColor: '#3b82f6',
-        backgroundColor: '#121312',
-        shadowColor: "#fff",
-        borderColor: "#888",
+        backgroundColor: '#000',
+        shadowColor: "#888",
+        borderColor: "#555",
         sliderThumbColor: '#999'
     },
     'light': {
         textColor: '#111',
         iconColor: '#3478f5',
-        backgroundColor: '#f3f3f3',
-        shadowColor: "#000",
-        borderColor: "#888",
+        backgroundColor: '#fff',
+        shadowColor: "#888",
+        borderColor: "#ccc",
         sliderThumbColor: '#ffffff'
     }
 };

@@ -161,7 +161,7 @@ class HeaderBar extends Component {
                     : null}
 
                 <TouchableOpacity style={this.styles.button} onPress={this.props.onRightButtonPressed}>
-                    <Ionicons name={this.props.rightIconName} size={34} color={colors[this.state.darkMode].iconColor} />
+                    <Ionicons name={this.props.rightIconName} size={30} color={colors[this.state.darkMode].iconColor} />
                 </TouchableOpacity>
 
             </Animated.View>

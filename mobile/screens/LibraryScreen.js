@@ -336,7 +336,7 @@ class LibraryScreen extends Component {
                 <HeaderBar
                     title={strings.title}
                     alwaysShown={true}
-                    rightIconName={'ios-cog'}
+                    rightIconName={'md-person'}
                     onRightButtonPressed={() => {
                         Alert.alert('Settings pressed');
                     }}

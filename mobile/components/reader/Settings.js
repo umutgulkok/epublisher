@@ -22,7 +22,6 @@ import {ThemeKeys} from '../../helpers/Themes';
 import BarButtonStyle from '../../styles/common/BarButtonStyles';
 import {colors, HeaderBarStyles, HeaderBarTitleStyle} from '../../styles/common/HeaderBarStyles';
 import ModalContainerStyle from '../../styles/common/ModalContainerStyles';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const continuousFlowKey = 'scrolled-continuous';
 const paginatedFlowKey = 'paginated';
