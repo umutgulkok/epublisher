@@ -104,7 +104,7 @@ echo '[Service]' | tee -a /etc/systemd/system/gunicorn.service
 echo 'User=ubuntu' | tee -a /etc/systemd/system/gunicorn.service
 echo 'Group=www-data' | tee -a /etc/systemd/system/gunicorn.service
 echo 'WorkingDirectory=/home/ubuntu/epublisher/server/' | tee -a /etc/systemd/system/gunicorn.service
-echo 'ExecStart=/usr/local/bin/gunicorn --error-logfile /home/ubuntu/epublisher/server/log/error.log --access-logfile /home/ubuntu/epublisher/server/log/access.log --workers 3 --bind unix:/run/gunicorn.sock epublisher.wsgi:application' | tee -a /etc/systemd/system/gunicorn.service
+echo 'ExecStart=/usr/local/bin/gunicorn --capture-output --log-level info --error-logfile /home/ubuntu/epublisher/server/log/error.log --access-logfile /home/ubuntu/epublisher/server/log/access.log --workers 3 --bind unix:/run/gunicorn.sock epublisher.wsgi:application' | tee -a /etc/systemd/system/gunicorn.service
 echo '' | tee -a /etc/systemd/system/gunicorn.service
 echo '[Install]' | tee -a /etc/systemd/system/gunicorn.service
 echo 'WantedBy=multi-user.target' | tee -a /etc/systemd/system/gunicorn.service
