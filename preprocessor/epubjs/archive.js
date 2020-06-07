@@ -1,6 +1,6 @@
 const {defer, isXml, parse} = require("./utils/core");
 const request = require("./utils/request");
-const mime = require("mime/mime");
+const mime = require("mime");
 const Path = require("./utils/path");
 
 /**

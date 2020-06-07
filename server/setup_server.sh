@@ -39,7 +39,10 @@ else
 fi
 
 # Install NodeJS
+apt -y install curl dirmngr apt-transport-https lsb-release ca-certificates
+curl -sL https://deb.nodesource.com/setup_12.x | bash -
 apt install -y nodejs
+apt install -y npm
 
 # Install Python
 apt install -y software-properties-common
@@ -61,6 +64,8 @@ rm -rf /home/ubuntu/epublisher
 git clone https://github.com/umutgulkok/epublisher.git
 echo 'Edit your Django settings file'
 vi /home/ubuntu/epublisher/server/epublisher/settings/prod.py
+cd /home/ubuntu/epublisher/preprocessor || exit
+npm install
 cd /home/ubuntu/epublisher/server || exit
 pip install -r requirements.txt
 python manage.py migrate

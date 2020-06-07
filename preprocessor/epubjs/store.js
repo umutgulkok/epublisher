@@ -1,6 +1,6 @@
 const {defer, isXml, parse} = require("./utils/core");
 const httpRequest = require("./utils/request");
-const mime = require("mime/mime");
+const mime = require("mime");
 const Path = require("./utils/path");
 const EventEmitter = require("event-emitter");
 
