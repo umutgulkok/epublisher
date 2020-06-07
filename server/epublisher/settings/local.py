@@ -1,10 +1,7 @@
 from .base import *
 
-NODEJS_PATH = '/Users/umutgulkok/.nvm/versions/node/v12.16.2/bin/node'
+NODEJS_PATH = '<YOUR_NODEJS_PATH>'
 
-USER_API_URL = 'https://yetkin.com.tr/index.php?route=api/auth&api_token=1'
-USER_API_USERNAME = 'epublisher'
-USER_API_KEY = '84gJkcZqqrw31UMT7MwJeyaKEaPYpQdBFcMpGuVanAzx7fzY7YwpOf5ME8sXj3Mwrrqx4CDLmgIx6SeY4' \
-               'dTPMSTbPLeBVjZ1aUWhejahh1HCCefp5LSbHLhqAOB1AO6buLaMzweDWf6aJPBOjlAN3sHzpaqkCsOGbC' \
-               'OHL07MjwpAK3Rixszm8iscfhaLLdiuwY5f1EeCF5uDm6Vhw3Dq2U2PxhWIQojn7AOaMPuxGB1YyZn077p' \
-               'NOWnSoSITsqVC'
+USER_API_URL = '<YOUR_USER_API_URL>'
+USER_API_USERNAME = '<YOUR_USER_API_USER>'
+USER_API_KEY = '<YOUR_USER_API_KEY>'
