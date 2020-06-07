@@ -4,13 +4,12 @@ from django.db.models import FileField
 from django.forms import forms
 from django.template.defaultfilters import filesizeformat
 from django.utils.translation import ugettext_lazy as _
-from threading import Thread
 
 from epublisher.settings.local import (
     STORAGE_DIR, LOCATIONS_PREPROCESSOR, SEARCH_PREPROCESSOR, NODEJS_PATH,
 )
 from .constants import (
-    STORAGE_DIR_NAME, EPUB_FILENAME, LOCATIONS_FILENAME, SEARCH_FILENAME
+    EPUB_FILENAME, LOCATIONS_FILENAME, SEARCH_FILENAME,
 )
 
 
@@ -45,7 +44,7 @@ class ContentTypeRestrictedFileField(FileField):
                 if file._size > self.max_upload_size:
                     raise forms.ValidationError(
                         _('File size limit: {1}. Current file size: {2}').format(
-                        filesizeformat(self.max_upload_size), filesizeformat(file._size)))
+                            filesizeformat(self.max_upload_size), filesizeformat(file._size)))
             else:
                 raise forms.ValidationError(_('File type not supported'))
         except AttributeError:

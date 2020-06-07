@@ -1,46 +1,63 @@
+#!/bin/bash
+
 ####################################################################################################
 # Guide: https://www.digitalocean.com/community/tutorials/how-to-set-up-django-with-postgres-nginx-and-gunicorn-on-ubuntu-18-04
 # Suggested Linux Distribution: Ubuntu 18.04.3 (LTS) x64
-# Assumes that the current user is 'root'
+# The current user must be 'root'
 ####################################################################################################
 
-apt update
-apt install -y git
-
+# Always work with root
+if [[ $EUID -ne 0 ]]; then
+  echo "This script must be run as root"
+  exit 1
+fi
 echo "Set a new root password"
 passwd
-apt-get install -y sudo
-sed -i 's/PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
-echo 'AllowUsers ubuntu' >> /etc/ssh/sshd_config
+
+# Extend SSH duration
 echo 'ClientAliveInterval 60' >> /etc/ssh/sshd_config
-echo "Adding new non-root user named 'ubuntu'"
-adduser ubuntu
-usermod -a -G sudo ubuntu
-cp -r /root/.ssh /home/ubuntu
-chown -R ubuntu:ubuntu /home/ubuntu/.ssh
-chmod -R 700 /home/ubuntu/.ssh/
+# Allow root SSH temporarily
+sed -i 's/PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config
+service ssh restart
+
+# Update the OS
+apt update
+apt upgrade -y
+apt install -y sudo
+
+# Create a non-root user
+if id "ubuntu" >/dev/null 2>&1; then
+  echo "User 'ubuntu' exists, skip"
+else
+  echo "Adding a new non-root user named 'ubuntu'"
+  echo "Set a new password for the new user 'ubuntu'"
+  adduser ubuntu
+  usermod -aG sudo ubuntu
+  cp -r /root/.ssh /home/ubuntu
+  chown -R ubuntu:ubuntu /home/ubuntu/.ssh
+  chmod -R 700 /home/ubuntu/.ssh/
+fi
 
 # Install NodeJS
-sudo apt install -y nodejs
+apt install -y nodejs
 
 # Install Python
-sudo apt install -y software-properties-common
-sudo add-apt-repository -y ppa:deadsnakes/ppa
-sudo apt install -y python3.7
+apt install -y software-properties-common
+add-apt-repository -y ppa:deadsnakes/ppa
+apt install -y python3.7
 python3.7 --version
-sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.7 1
-sudo apt install -y python3-venv
-sudo apt install -y python3.7-venv
-sudo apt install -y python3-pip
-sudo apt install -y python3.7-dev
-sudo apt install -y gettext
-python3.7 -m venv django-venv
-source /home/ubuntu/django-venv/bin/activate
+update-alternatives --install /usr/bin/python python /usr/bin/python3.7 1
+apt install -y python-pip
+apt install -y python3-pip
+apt install -y python3.7-dev
+apt install -y gettext
 pip install uwsgi
 pip install gunicorn
 
 # Install Epublisher
-cd /home/ubuntu
+apt install -y git
+cd /home/ubuntu || exit
+rm -rf /home/ubuntu/epublisher
 git clone https://github.com/umutgulkok/epublisher.git
 echo 'Edit your Django settings file'
 vi /home/ubuntu/epublisher/server/epublisher/settings/prod.py
@@ -50,95 +67,107 @@ python manage.py migrate
 echo 'Create epublisher admin user'
 python manage.py createsuperuser
 python manage.py compilemessages
+mkdir /home/ubuntu/epublisher/server/epublisher/static
+mkdir /home/ubuntu/epublisher/server/storage
+mkdir /home/ubuntu/epublisher/server/log
 python manage.py collectstatic --settings=epublisher.settings.prod
+chown -R ubuntu:ubuntu /home/ubuntu
 # test with 'python manage.py runserver --settings=epublisher.settings.prod 0.0.0.0:80'
 # test with 'uwsgi --http :8000 --module epublisher.wsgi'
-deactivate
 
 # Setup Gunicorn
 cd /home/ubuntu
-sudo rm /etc/systemd/system/gunicorn.socket
-sudo touch /etc/systemd/system/gunicorn.socket
-echo '[Unit]' | sudo tee -a /etc/systemd/system/gunicorn.socket
-echo 'Description=gunicorn socket' | sudo tee -a /etc/systemd/system/gunicorn.socket
-echo '' | sudo tee -a /etc/systemd/system/gunicorn.socket
-echo '[Socket]' | sudo tee -a /etc/systemd/system/gunicorn.socket
-echo 'ListenStream=/run/gunicorn.sock' | sudo tee -a /etc/systemd/system/gunicorn.socket
-echo '' | sudo tee -a /etc/systemd/system/gunicorn.socket
-echo '[Install]' | sudo tee -a /etc/systemd/system/gunicorn.socket
-echo 'WantedBy=sockets.target' | sudo tee -a /etc/systemd/system/gunicorn.socket
+rm /etc/systemd/system/gunicorn.socket
+touch /etc/systemd/system/gunicorn.socket
+echo '[Unit]' | tee -a /etc/systemd/system/gunicorn.socket
+echo 'Description=gunicorn socket' | tee -a /etc/systemd/system/gunicorn.socket
+echo '' | tee -a /etc/systemd/system/gunicorn.socket
+echo '[Socket]' | tee -a /etc/systemd/system/gunicorn.socket
+echo 'ListenStream=/run/gunicorn.sock' | tee -a /etc/systemd/system/gunicorn.socket
+echo '' | tee -a /etc/systemd/system/gunicorn.socket
+echo '[Install]' | tee -a /etc/systemd/system/gunicorn.socket
+echo 'WantedBy=sockets.target' | tee -a /etc/systemd/system/gunicorn.socket
 
-sudo rm /etc/systemd/system/gunicorn.service
-sudo touch /etc/systemd/system/gunicorn.service
-echo '[Unit]' | sudo tee -a /etc/systemd/system/gunicorn.service
-echo 'Description=gunicorn daemon' | sudo tee -a /etc/systemd/system/gunicorn.service
-echo 'Requires=gunicorn.socket' | sudo tee -a /etc/systemd/system/gunicorn.service
-echo 'After=network.target' | sudo tee -a /etc/systemd/system/gunicorn.service
-echo '' | sudo tee -a /etc/systemd/system/gunicorn.service
-echo '[Service]' | sudo tee -a /etc/systemd/system/gunicorn.service
-echo 'User=ubuntu' | sudo tee -a /etc/systemd/system/gunicorn.service
-echo 'Group=www-data' | sudo tee -a /etc/systemd/system/gunicorn.service
-echo 'WorkingDirectory=/home/ubuntu/epublisher/server/' | sudo tee -a /etc/systemd/system/gunicorn.service
-echo 'ExecStart=/home/ubuntu/django-venv/bin/gunicorn \ ' | sudo tee -a /etc/systemd/system/gunicorn.service
-echo '          --error-logfile - \ ' | sudo tee -a /etc/systemd/system/gunicorn.service
-echo '          --access-logfile - \ ' | sudo tee -a /etc/systemd/system/gunicorn.service
-echo '          --workers 3 \ ' | sudo tee -a /etc/systemd/system/gunicorn.service
-echo '          --bind unix:/run/gunicorn.sock \ ' | sudo tee -a /etc/systemd/system/gunicorn.service
-echo '          epublisher.wsgi:application' | sudo tee -a /etc/systemd/system/gunicorn.service
-echo '' | sudo tee -a /etc/systemd/system/gunicorn.service
-echo '[Install]' | sudo tee -a /etc/systemd/system/gunicorn.service
-echo 'WantedBy=multi-user.target' | sudo tee -a /etc/systemd/system/gunicorn.service
+rm /etc/systemd/system/gunicorn.service
+touch /etc/systemd/system/gunicorn.service
+echo '[Unit]' | tee -a /etc/systemd/system/gunicorn.service
+echo 'Description=gunicorn daemon' | tee -a /etc/systemd/system/gunicorn.service
+echo 'Requires=gunicorn.socket' | tee -a /etc/systemd/system/gunicorn.service
+echo 'After=network.target' | tee -a /etc/systemd/system/gunicorn.service
+echo '' | tee -a /etc/systemd/system/gunicorn.service
+echo '[Service]' | tee -a /etc/systemd/system/gunicorn.service
+echo 'User=ubuntu' | tee -a /etc/systemd/system/gunicorn.service
+echo 'Group=www-data' | tee -a /etc/systemd/system/gunicorn.service
+echo 'WorkingDirectory=/home/ubuntu/epublisher/server/' | tee -a /etc/systemd/system/gunicorn.service
+echo 'ExecStart=/usr/local/bin/gunicorn --error-logfile /home/ubuntu/epublisher/server/log/error.log --access-logfile /home/ubuntu/epublisher/server/log/access.log --workers 3 --bind unix:/run/gunicorn.sock epublisher.wsgi:application' | tee -a /etc/systemd/system/gunicorn.service
+echo '' | tee -a /etc/systemd/system/gunicorn.service
+echo '[Install]' | tee -a /etc/systemd/system/gunicorn.service
+echo 'WantedBy=multi-user.target' | tee -a /etc/systemd/system/gunicorn.service
 
-sudo systemctl reload gunicorn.service
-sudo systemctl start gunicorn.socket
-sudo systemctl enable gunicorn.socket
+systemctl reload gunicorn.service
+systemctl start gunicorn.service
+systemctl enable gunicorn.service
+
+systemctl reload gunicorn.socket
+systemctl start gunicorn.socket
+systemctl enable gunicorn.socket
 
 # Test Gunicorn
-sudo systemctl status gunicorn.socket
-file /run/gunicorn.sock
-sudo journalctl -u gunicorn.socket
+# systemctl status gunicorn.service
+# journalctl -u gunicorn.service
+# systemctl status gunicorn.socket
+# file /run/gunicorn.sock
+# journalctl -u gunicorn.socket
 # You should see some html with this:
 #    curl --unix-socket /run/gunicorn.sock localhost
 # Now the service has been activated, you should see the workers:
-#    sudo systemctl status gunicorn
+#    systemctl status gunicorn
 
 # Setup NGINX
 cd /home/ubuntu
-sudo apt-get install -y nginx
-sudo rm /etc/nginx/sites-available/epublisher_nginx.conf
-sudo touch /etc/nginx/sites-available/epublisher_nginx.conf
-echo 'server {' | sudo tee -a /etc/nginx/sites-available/epublisher_nginx.conf
-echo '    listen      80;' | sudo tee -a /etc/nginx/sites-available/epublisher_nginx.conf
+apt install -y nginx
+rm /etc/nginx/sites-available/epublisher_nginx.conf
+touch /etc/nginx/sites-available/epublisher_nginx.conf
+echo 'server {' | tee -a /etc/nginx/sites-available/epublisher_nginx.conf
+echo '    listen      80;' | tee -a /etc/nginx/sites-available/epublisher_nginx.conf
 read -p 'Enter your host name: '
-echo "    server_name $REPLY;" | sudo tee -a /etc/nginx/sites-available/epublisher_nginx.conf
-echo '    charset     utf-8;' | sudo tee -a /etc/nginx/sites-available/epublisher_nginx.conf
-echo '    client_max_body_size 75M;' | sudo tee -a /etc/nginx/sites-available/epublisher_nginx.conf
-echo '' | sudo tee -a /etc/nginx/sites-available/epublisher_nginx.conf
-echo '    location /static {' | sudo tee -a /etc/nginx/sites-available/epublisher_nginx.conf
-echo '        alias /home/ubuntu/static;' | sudo tee -a /etc/nginx/sites-available/epublisher_nginx.conf
-echo '    }' | sudo tee -a /etc/nginx/sites-available/epublisher_nginx.conf
-echo '' | sudo tee -a /etc/nginx/sites-available/epublisher_nginx.conf
-echo '    location / {' | sudo tee -a /etc/nginx/sites-available/epublisher_nginx.conf
-echo '        include proxy_params;' | sudo tee -a /etc/nginx/sites-available/epublisher_nginx.conf
-echo '        proxy_pass http://unix:/run/gunicorn.sock;' | sudo tee -a /etc/nginx/sites-available/epublisher_nginx.conf
-echo '    }' | sudo tee -a /etc/nginx/sites-available/epublisher_nginx.conf
-echo '}' | sudo tee -a /etc/nginx/sites-available/epublisher_nginx.conf
-sudo ln -s /etc/nginx/sites-available/epublisher_nginx.conf /etc/nginx/sites-enabled
-sudo nginx -t
-sudo systemctl restart nginx
+echo "    server_name $REPLY;" | tee -a /etc/nginx/sites-available/epublisher_nginx.conf
+echo '    charset     utf-8;' | tee -a /etc/nginx/sites-available/epublisher_nginx.conf
+echo '    client_max_body_size 75M;' | tee -a /etc/nginx/sites-available/epublisher_nginx.conf
+echo '' | tee -a /etc/nginx/sites-available/epublisher_nginx.conf
+echo '    location /static {' | tee -a /etc/nginx/sites-available/epublisher_nginx.conf
+echo '        alias /home/ubuntu/static;' | tee -a /etc/nginx/sites-available/epublisher_nginx.conf
+echo '    }' | tee -a /etc/nginx/sites-available/epublisher_nginx.conf
+echo '' | tee -a /etc/nginx/sites-available/epublisher_nginx.conf
+echo '    location / {' | tee -a /etc/nginx/sites-available/epublisher_nginx.conf
+echo '        include proxy_params;' | tee -a /etc/nginx/sites-available/epublisher_nginx.conf
+echo '        proxy_pass http://unix:/run/gunicorn.sock;' | tee -a /etc/nginx/sites-available/epublisher_nginx.conf
+echo '    }' | tee -a /etc/nginx/sites-available/epublisher_nginx.conf
+echo '}' | tee -a /etc/nginx/sites-available/epublisher_nginx.conf
+ln -s /etc/nginx/sites-available/epublisher_nginx.conf /etc/nginx/sites-enabled
+nginx -t
+systemctl restart nginx
 
 # Setup Firewall
-sudo apt install -y ufw
-sudo ufw default deny incoming
-sudo ufw default allow outgoing
-sudo ufw allow ssh
-sudo ufw allow https
-sudo ufw allow http
-sudo ufw --force enable
+apt install -y ufw
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow ssh
+ufw allow https
+ufw allow http
+ufw --force enable
 
 # Setup SSL Certificate
 # https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-18-04
-sudo add-apt-repository -y ppa:certbot/certbot
-sudo apt install -y python-certbot-nginx
+add-apt-repository -y ppa:certbot/certbot
+apt install -y python-certbot-nginx
 read -p 'Enter your host name: '
-sudo certbot --nginx -d $REPLY
+certbot --nginx -d $REPLY
+
+# Disallow root SSH
+sed -i 's/PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
+sed -i 's/AllowUsers ubuntu//g' /etc/ssh/sshd_config
+echo 'AllowUsers ubuntu' >> /etc/ssh/sshd_config
+echo "WARNING: SSH with root will be disabled. Use 'ssh ubuntu@<YOUR_DOMAIN_NAME_OR_IP>' from now on."
+
+reboot
