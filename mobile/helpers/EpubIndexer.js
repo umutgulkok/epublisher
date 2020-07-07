@@ -1,19 +1,16 @@
 import {openDatabase} from 'react-native-sqlite-storage';
+import RNFS from 'react-native-fs';
 
 const tableName = 'ePubFullText';
 const dbMap = {};
 
 const getDb = (bookId) => {
-    return new Promise((resolve, reject) => {
-        let db = dbMap['bookId'];
-        if (db) {
-            resolve(db);
-        } else {
-            db = openDatabase({name: bookId + '.db', location: 'default'}, null, reject);
-            dbMap['bookId'] = db;
-            createBookIndexDb(db).then(resolve).catch(reject);
-        }
-    });
+    let db = dbMap[bookId];
+    if (!db) {
+        db = openDatabase({name: bookId + '.db', location: 'default'}, null, null);
+        dbMap[bookId] = db;
+    }
+    return db;
 };
 
 const createBookIndexDb = (db) => {
@@ -29,101 +26,65 @@ const createBookIndexDb = (db) => {
 };
 
 const insertToBookIndexDb = (bookId, indexElements) => {
-    return new Promise((resolve, reject) => {
-        getDb(bookId).then(db => {
+    return new Promise((resolve) => {
+        const db = getDb(bookId);
+        createBookIndexDb(db).then(() => {
             db.transaction((tx) => {
                 const allPromises = [];
                 for (let i = 0; i < indexElements.length; i++) {
                     const indexElement = indexElements[i];
+                    indexElement.text = indexElement.text.trim();
+                    if (indexElement.text.length < 3)
+                        continue;
                     allPromises.push(new Promise((resolve, reject) => {
                         tx.executeSql(`INSERT INTO ${tableName} VALUES (?, ?)`,
                             [indexElement.cfi, indexElement.text],
                             (tx, results) => {
-                            resolve();
-                        });
+                                resolve();
+                            });
                     }));
                 }
-                Promise.all(allPromises).then(resolve).catch(reject);
+                Promise.all(allPromises).then(resolve);
             });
         });
     });
 };
 
-const queryBookIndexDb = (bookId, searchTerm) => {
+const queryBookIndexDb = (bookId, searchTerm, maxResults) => {
     return new Promise((resolve, reject) => {
-        getDb(bookId).then(db => {
-            db.transaction((tx) => {
-                tx.executeSql(`SELECT * FROM ${tableName} WHERE text LIKE ?`,
-                    ['%' + searchTerm.trim() + '%'],
-                    (tx, results) => {
-                    resolve(results);
-                });
+        const db = getDb(bookId);
+        db.transaction((tx) => {
+            tx.executeSql(`SELECT * FROM ${tableName} WHERE text LIKE ? LIMIT ?`,
+                ['%' + searchTerm.trim() + '%', maxResults],
+                (tx, results) => {
+                resolve(results);
             });
         });
     });
 };
 
-const processNode = (node, parentStep, indexElements, section) => {
-    if (!node.childNodes) {
-        return;
-    }
-    for (let i = 0; i < node.childNodes.length; i++) {
-        const currentStep = parentStep + '/' + (i + 1).toString();
-        const child = node.childNodes[i.toString()];
-        if (child.traversedWhileIndexing) {
-            continue;
-        }
-        const text = child.data;
-        if (text && text.length > 5) {
-            const cfi = section.cfiBase + '!' + currentStep;
-            indexElements.push({cfi, text});
-        }
-        child.traversedWhileIndexing = true;
-        processNode(child, currentStep, indexElements, section);
-    }
-};
-
-const indexBook = (book) => {
+const indexBook = (bookId, searchIndexPath) => {
     console.log('Start indexing...');
-    return new Promise((resolve, reject) => {
-        const bookId = 'moby-dick';
-        const indexElements = [];
-        const sectionProcessingPromises = [];
-        const request = book.locations.request;
-        book.spine.each(section => {
-            sectionProcessingPromises.push(new Promise((resolve, reject) => {
-                section.load(request).then(contents => {
-                    try {
-                        processNode(contents, '', indexElements, section);
-                        resolve();
-                    } catch (error) {
-                        reject(error);
-                    }
-                });
-            }));
-        });
-
-        Promise.all(sectionProcessingPromises)
-            .then(_ => {
-                insertToBookIndexDb(bookId, indexElements).then(resolve).catch(reject);
-            })
-            .catch(reject);
+    return new Promise(resolve => {
+        RNFS.readFile(searchIndexPath, 'utf8')
+            .then(str => {
+                insertToBookIndexDb(bookId, JSON.parse(str)).then(resolve);
+            });
     });
 };
 
 const closeDb = (bookId) => {
-    return new Promise((resolve, reject) => {
-        let db = dbMap['bookId'];
-        if (db) {
-            db.close().then(resolve).catch(reject);
-        }
-    });
+    let db = dbMap[bookId];
+    if (db) {
+        delete dbMap[bookId]
+        db.close();
+    }
 };
 
-const searchBook = (bookId, searchTerm, highlightLength = 100, maxResults = 500) => {
+const searchBook = (bookId, searchTerm, highlightLength = 100, maxResults = 200) => {
     const leadTrailLength = Math.max(20, (highlightLength - searchTerm.length) / 2);
     return new Promise((resolve, reject) => {
-        queryBookIndexDb(bookId, searchTerm)
+        queryBookIndexDb(bookId, searchTerm, maxResults)
             .then(queryResults => {
                 const searchResults = [];
                 for (let i = 0; i < queryResults.rows.length; ++i) {

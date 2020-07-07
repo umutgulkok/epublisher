@@ -22,7 +22,6 @@ const searchDebounceDelay = 500;
 
 String.prototype.format = function() {
     let a = this;
-    Alert.alert(a, arguments.length);
     for (let k in arguments) {
         a = a.replace('{' + k + '}', arguments[k]);
     }
@@ -34,6 +33,7 @@ class Search extends Component {
         super(props);
 
         this.state = {
+            bookKey: props.bookKey,
             error: '',
             modalVisible: false
         };
@@ -102,12 +102,8 @@ class Search extends Component {
         if (!searchTerm || searchTerm.length < 3)
             return;
 
-        searchBook('moby-dick', searchTerm)
+        searchBook(this.state.bookKey, searchTerm)
             .then(searchResults => {
-                // console.log('searchResults', searchResults.rows.length);
-                // for (let i = 0; i < searchResults.rows.length; ++i) {
-                //     console.log('searchResults', searchResults.rows.item(i).text);
-                // }
                 this.setState({
                     dataSource: searchResults || []
                 });
@@ -121,7 +117,6 @@ class Search extends Component {
                 <Modal
                     animationType={'slide'}
                     visible={this.state.modalVisible}
-                    // onRequestClose={() => console.log('close requested')}
                 >
                     <View style={styles.header}>
                         <TouchableOpacity style={styles.backButton}/>

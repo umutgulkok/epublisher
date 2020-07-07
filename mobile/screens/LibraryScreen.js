@@ -7,13 +7,13 @@ import NetInfo from '@react-native-community/netinfo';
 import RNFetchBlob from 'rn-fetch-blob'
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import LocalizedStrings from 'react-native-localization';
-import DeviceInfo, {DeviceType} from 'react-native-device-info';
 
 import constants from '../constants';
 import {joinPath} from '../helpers/Utils';
 import HeaderBar from '../components/common/HeaderBar';
 import LoginScreen from './LoginScreen';
 import {styles, colors} from '../styles/LibraryStyles';
+import {indexBook} from '../helpers/EpubIndexer';
 
 const contentKeyCover = 'cover';
 const contentKeyBook = 'book';
@@ -251,22 +251,37 @@ class LibraryScreen extends Component {
                     }
                 })
                 .then((res) => {
-                    if (res.info().status === 200) {
+                    if (res.info().status !== 200) {
+                        console.log(`Unexpected response code ${res.info().status} for URL: ${url}`);
+                        Alert.alert(strings.error, strings.failedToLoadBook);
+                        resolve();
+                    }
+
+                    if (contentKey === contentKeySearch) {
+                        console.log(`The content file ${contentKey} saved for book ${bookKey}`);
+                        indexBook(bookKey, this._getContentFileName(bookKey, contentKeySearch))
+                            .then(() => {
+                                const book = this._getBookFromState(bookKey);
+                                book.isSearchReady = true;
+                                this.setState({data: this.state.data}, () => {
+                                    AsyncStorage.setItem('@library', JSON.stringify(this.state.data));
+                                });
+                                resolve();
+                            });
+                    } else {
                         if (contentKey === contentKeyCover) {
                             this._getBookFromState(bookKey).isCoverReady = true;
                         } else if (contentKey === contentKeyBook) {
                             this._getBookFromState(bookKey).isBookReady = true;
                         } else if (contentKey === contentKeyLocations) {
                             this._getBookFromState(bookKey).isLocationsReady = true;
-                        } else if (contentKey === contentKeySearch) {
-                            this._getBookFromState(bookKey).isSearchReady = true;
                         }
                         this.setState({data: this.state.data}, () => {
                             AsyncStorage.setItem('@library', JSON.stringify(this.state.data));
                         });
                         console.log(`The content file ${contentKey} saved for book ${bookKey}`);
+                        resolve();
                     }
-                    resolve();
                 })
                 .catch(reject);
         });
@@ -298,11 +313,9 @@ class LibraryScreen extends Component {
         this.setState({
             value: text,
         });
-
         const newData = this.arrayholder.filter(item => {
             const itemData = `${item.name.toLowerCase()} ${item.author.toLowerCase()}`;
             const textData = text.toLowerCase();
-
             return itemData.indexOf(textData) > -1;
         });
         this.setState({
@@ -342,11 +355,10 @@ class LibraryScreen extends Component {
                     }}
                 />
                 <FlatList
-                    ref={(list) => (this._list = list)}
                     style={styles.list}
                     data={this.state.data}
                     backgroundColor={colors[this.state.darkMode].listItemBackgroundColor}
-                    renderItem={({item, index, separators}) => (
+                    renderItem={({item}) => (
                         <TouchableHighlight
                             key={item.key}
                             onPress={() => this._onBookSelect(item)}>
@@ -368,7 +380,7 @@ class LibraryScreen extends Component {
                             />
                         </TouchableHighlight>
                     )}
-                    keyExtractor={(item, index) => {
+                    keyExtractor={item => {
                         return item.key;
                     }}
                     ItemSeparatorComponent={this.renderSeparator}
@@ -392,6 +404,7 @@ let strings = new LocalizedStrings({
         title: 'Library',
         searchPlaceHolder: 'Search...',
         failedToLoadLibrary: 'Failed to load the library',
+        failedToLoadBook: 'Failed to load a book content\nTry logging out and in again or communicate with the provider',
         checkInternet: 'Couldn\'t access the server\nCheck the Internet connection',
         newBooksLoaded: ' new book have been added',
         newBooksLoadedPlural: ' new books have been added',

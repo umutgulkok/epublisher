@@ -945,6 +945,7 @@ class EpubCFI {
 		if (cfi.range) {
 			start = cfi.start;
 			startSteps = cfi.path.steps.concat(start.steps);
+            // console.log(start, startSteps);
 			startContainer = this.findNode(startSteps, doc, needsIgnoring ? ignoreClass : null);
 			end = cfi.end;
 			endSteps = cfi.path.steps.concat(end.steps);
@@ -952,6 +953,7 @@ class EpubCFI {
 		} else {
 			start = cfi.path;
 			startSteps = cfi.path.steps;
+            // console.log(start, startSteps);
 			startContainer = this.findNode(cfi.path.steps, doc, needsIgnoring ? ignoreClass : null);
 		}
 

@@ -18,6 +18,7 @@ import Search from '../components/reader/Search';
 import {getFontOrientationFactor} from '../helpers/Utils';
 import {EpubStreamer} from '../components/epubjs-rn/Streamer';
 import Epub from '../components/epubjs-rn/Epub';
+import {closeDb} from '../helpers/EpubIndexer';
 
 class Reader extends Component {
     constructor(props) {
@@ -87,6 +88,7 @@ class Reader extends Component {
 
     componentWillUnmount() {
         this.streamer.destroy();
+        closeDb(this.state.bookKey);
         Orientation.removeOrientationListener(this._orientationDidChange);
     }
 
@@ -231,7 +233,7 @@ class Reader extends Component {
                         display={(loc) => {
                             this.setState({location: loc});
                         }}
-                        bookId={this.state.bookKey}
+                        bookKey={this.state.bookKey}
                     />
                 </View>
                 <View>

@@ -16,7 +16,7 @@ const FooterBarStyles = {
         right: 0,
         left: 0,
         borderTopWidth: 1,
-        borderTopColor: '#BBB',
+        borderTopColor: '#eeeeee',
         position: 'absolute',
         alignItems: 'center',
         justifyContent: 'center',
