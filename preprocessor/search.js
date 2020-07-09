@@ -13,7 +13,12 @@ const processNode = (node, parentStep, indexElements, section) => {
         return;
     }
     for (let i = 0; i < node.childNodes.length; i++) {
-        const currentStep = parentStep + '/' + (i + 1).toString();
+        let currentStep = parentStep;
+        if (parentStep === '') {
+            currentStep += '/' + (i + 2).toString();
+        } else {
+            currentStep += '/' + (i + 1).toString();
+        }
         const child = node.childNodes[i.toString()];
         if (child.traversedWhileIndexing) {
             continue;

@@ -1,10 +1,8 @@
 import React, {Component} from 'react';
 import {
     StyleSheet,
-    Text,
     View,
     Modal,
-    TouchableOpacity,
 } from 'react-native';
 import ReactNativeSettingsPage, {
     SectionRow,
@@ -12,16 +10,13 @@ import ReactNativeSettingsPage, {
     CheckRow,
     SliderRow
 } from './settings/ReactNativeSettingsPage'
-import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import LocalizedStrings from 'react-native-localization';
 import {initialMode as initialDarkMode} from 'react-native-dark-mode/dist/initial-mode';
 import {eventEmitter as darkModeEventEmitter} from 'react-native-dark-mode/dist/event-emitter';
 
 import {PreferenceKeys, storePreference} from '../../helpers/Preferences';
 import {ThemeKeys} from '../../helpers/Themes';
-import BarButtonStyle from '../../styles/common/BarButtonStyles';
-import {colors, HeaderBarStyles, HeaderBarTitleStyle} from '../../styles/common/HeaderBarStyles';
-import ModalContainerStyle from '../../styles/common/ModalContainerStyles';
+import HeaderBar from '../../components/common/HeaderBar';
 
 const continuousFlowKey = 'scrolled-continuous';
 const paginatedFlowKey = 'paginated';
@@ -58,7 +53,7 @@ class Settings extends Component {
     }
 
     hide() {
-        this.saveSettings();
+        this._saveSettings();
         this.props.settingsChangeHook({
             flow: this.state.flow,
             fontSize: this.state.fontSize,
@@ -67,7 +62,7 @@ class Settings extends Component {
         this.setState({modalVisible: false});
     }
 
-    saveSettings() {
+    _saveSettings() {
         storePreference(PreferenceKeys.flow, this.state.flow);
         storePreference(PreferenceKeys.fontSize, this.state.fontSize);
         storePreference(PreferenceKeys.theme, this.state.theme)
@@ -84,19 +79,14 @@ class Settings extends Component {
                     animationType={'slide'}
                     visible={this.state.modalVisible}
                 >
-                    <View style={{...styles.header, backgroundColor: colors[this.state.darkMode].backgroundColor}}>
-                        <TouchableOpacity style={styles.backButton}/>
-                        <Text style={{
-                            ...styles.headerTitle,
-                            color: colors[this.state.darkMode].textColor
-                        }}>{strings.title}</Text>
-                        <TouchableOpacity
-                            style={styles.backButton}
-                            onPress={() => this.hide()}
-                        >
-                            <EvilIcons name="close" size={34} color={colors[this.state.darkMode].iconColor}/>
-                        </TouchableOpacity>
-                    </View>
+                    <HeaderBar
+                        title={strings.title}
+                        alwaysShown={true}
+                        rightIconName={'md-close'}
+                        onRightButtonPressed={() => {
+                            this.hide();
+                        }}
+                    />
                     <View style={styles.container}>
                         <ReactNativeSettingsPage>
                             <SwitchRow
@@ -172,10 +162,12 @@ class Settings extends Component {
 }
 
 const styles = StyleSheet.create({
-    container: ModalContainerStyle,
-    headerTitle: HeaderBarTitleStyle,
-    header: HeaderBarStyles(false, true),
-    backButton: BarButtonStyle,
+    container: {
+        flex: 1,
+    },
+    content: {
+        flex: 1,
+    }
 });
 
 let strings = new LocalizedStrings({

@@ -7,13 +7,14 @@ import NetInfo from '@react-native-community/netinfo';
 import RNFetchBlob from 'rn-fetch-blob'
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import LocalizedStrings from 'react-native-localization';
+import {StyleSheet} from 'react-native';
 
 import constants from '../constants';
 import {joinPath} from '../helpers/Utils';
 import HeaderBar from '../components/common/HeaderBar';
 import LoginScreen from './LoginScreen';
-import {styles, colors} from '../styles/LibraryStyles';
 import {indexBook} from '../helpers/EpubIndexer';
+import RNFS from 'react-native-fs';
 
 const contentKeyCover = 'cover';
 const contentKeyBook = 'book';
@@ -296,7 +297,7 @@ class LibraryScreen extends Component {
         return null;
     }
 
-    renderSeparator = () => {
+    _renderSeparator = () => {
         return (
             <View
                 style={{
@@ -309,7 +310,7 @@ class LibraryScreen extends Component {
         );
     };
 
-    searchFilterFunction = text => {
+    _searchFilterFunction = text => {
         this.setState({
             value: text,
         });
@@ -323,13 +324,13 @@ class LibraryScreen extends Component {
         });
     };
 
-    renderHeader = () => {
+    _renderSearchBar = () => {
         return (
             <SearchBar
                 placeholder={strings.searchPlaceHolder}
                 lightTheme={this.state.darkMode === 'light'}
                 round={true}
-                onChangeText={text => this.searchFilterFunction(text)}
+                onChangeText={text => this._searchFilterFunction(text)}
                 autoCorrect={false}
                 value={this.state.value}
             />
@@ -337,7 +338,45 @@ class LibraryScreen extends Component {
     };
 
     _onBookSelect = (item) => {
-        this.props.navigation.navigate('reader', {bookKey: item.key})
+        for (const book of this.state.data) {
+            if (book.key === item.key) {
+                if (this._isBookReady(book)) {
+                    this.props.navigation.navigate('reader', {bookKey: book.key})
+                } else {
+                    Alert.alert(strings.bookNotReady)
+                }
+                return;
+            }
+        }
+    };
+
+    _resetState = () => {
+        this.deviceInfo = null;
+        this.deviceAuth = null;
+        this.loadingLibrary = false;
+        this.lastLoadLibraryTime = null;
+        this.isConnectedToInternet = false;
+        this.arrayholder = [];
+    };
+
+    _logOut = () => {
+        let searchDbPath = joinPath(RNFetchBlob.fs.dirs.LibraryDir, 'LocalDatabase');
+        for (const book of this.state.data) {
+            RNFS.unlink(joinPath(searchDbPath, book.key + '.db')).then();
+            RNFS.unlink(joinPath(searchDbPath, book.key + '.db-wal')).then();
+            RNFS.unlink(joinPath(searchDbPath, book.key + '.db-shm')).then();
+        }
+        RNFS.unlink(joinPath(RNFetchBlob.fs.dirs.DocumentDir, constants.bookStorageDir)).then();
+
+        this.deviceInfo = null;
+        this.deviceAuth = null;
+        this.loadingLibrary = false;
+        this.arrayholder = [];
+        this._loginScreen.resetState();
+        this.setState({data: []});
+        AsyncStorage.setItem('@deviceAuth', '');
+        AsyncStorage.setItem('@library', '');
+        this._loginScreen.show();
     };
 
     render() {
@@ -351,7 +390,14 @@ class LibraryScreen extends Component {
                     alwaysShown={true}
                     rightIconName={'md-person'}
                     onRightButtonPressed={() => {
-                        Alert.alert('Settings pressed');
+                        Alert.alert(
+                            strings.logoutTitle,
+                            strings.logoutConfirm,
+                            [
+                                {text: strings.yes, onPress: () => {this._logOut();}},
+                                {text: strings.no}
+                            ]
+                        );
                     }}
                 />
                 <FlatList
@@ -383,8 +429,8 @@ class LibraryScreen extends Component {
                     keyExtractor={item => {
                         return item.key;
                     }}
-                    ItemSeparatorComponent={this.renderSeparator}
-                    ListHeaderComponent={this.renderHeader}
+                    ItemSeparatorComponent={this._renderSeparator}
+                    ListHeaderComponent={this._renderSearchBar}
                 />
                 <LoginScreen
                     ref={(loginScreen) => (this._loginScreen = loginScreen)}
@@ -400,7 +446,7 @@ class LibraryScreen extends Component {
 }
 
 let strings = new LocalizedStrings({
-    en:{
+    en: {
         title: 'Library',
         searchPlaceHolder: 'Search...',
         failedToLoadLibrary: 'Failed to load the library',
@@ -413,8 +459,41 @@ let strings = new LocalizedStrings({
         authorizationError: 'Authorization error',
         tryLogoutLoginAgain: 'Please try logging out and login again',
         unableToFetchBookList: 'Unable to fetch the book list',
-        tryLoginAgainOrCommunicate: 'Try logging out and in again or communicate with the provider'
+        tryLoginAgainOrCommunicate: 'Try logging out and in again or communicate with the provider',
+        logoutTitle: 'Log Out',
+        logoutConfirm: 'Are you sure to log out?',
+        yes: 'Yes',
+        no: 'No',
+        bookNotReady: 'Book is not ready yet'
     },
+});
+
+const colors = {
+    'dark': {
+        listItemTitleColor: '#fff',
+        listItemSubtitleColor: '#8e8d93',
+        listItemBackgroundColor: '#000',
+        containerBackgroundColor: '#000',
+        separatorColor: '#323136',
+        progressColor: '#808080'
+    },
+    'light': {
+        listItemTitleColor: '#000',
+        listItemSubtitleColor: '#8a898e',
+        listItemBackgroundColor: '#fff',
+        containerBackgroundColor: '#fff',
+        separatorColor: '#8a898e',
+        progressColor: '#A0A0A0'
+    }
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    list: {
+        flex: 1
+    }
 });
 
 export default LibraryScreen;

@@ -4,11 +4,11 @@ import RNFS from 'react-native-fs';
 const tableName = 'ePubFullText';
 const dbMap = {};
 
-const getDb = (bookId) => {
-    let db = dbMap[bookId];
+const getDb = (bookKey) => {
+    let db = dbMap[bookKey];
     if (!db) {
-        db = openDatabase({name: bookId + '.db', location: 'default'}, null, null);
-        dbMap[bookId] = db;
+        db = openDatabase({name: bookKey + '.db', location: 'default'}, null, null);
+        dbMap[bookKey] = db;
     }
     return db;
 };
@@ -25,9 +25,9 @@ const createBookIndexDb = (db) => {
     });
 };
 
-const insertToBookIndexDb = (bookId, indexElements) => {
+const insertToBookIndexDb = (bookKey, indexElements) => {
     return new Promise((resolve) => {
-        const db = getDb(bookId);
+        const db = getDb(bookKey);
         createBookIndexDb(db).then(() => {
             db.transaction((tx) => {
                 const allPromises = [];
@@ -50,11 +50,11 @@ const insertToBookIndexDb = (bookId, indexElements) => {
     });
 };
 
-const queryBookIndexDb = (bookId, searchTerm, maxResults) => {
+const queryBookIndexDb = (bookKey, searchTerm, maxResults) => {
     return new Promise((resolve, reject) => {
-        const db = getDb(bookId);
+        const db = getDb(bookKey);
         db.transaction((tx) => {
-            tx.executeSql(`SELECT * FROM ${tableName} WHERE text LIKE ? LIMIT ?`,
+            tx.executeSql(`SELECT DISTINCT * FROM ${tableName} WHERE text LIKE ? LIMIT ?`,
                 ['%' + searchTerm.trim() + '%', maxResults],
                 (tx, results) => {
                 resolve(results);
@@ -63,47 +63,68 @@ const queryBookIndexDb = (bookId, searchTerm, maxResults) => {
     });
 };
 
-const indexBook = (bookId, searchIndexPath) => {
-    console.log('Start indexing...');
+const indexBook = (bookKey, searchIndexPath) => {
+    console.log(`Start indexing for ${bookKey}...`);
     return new Promise(resolve => {
         RNFS.readFile(searchIndexPath, 'utf8')
             .then(str => {
-                insertToBookIndexDb(bookId, JSON.parse(str)).then(resolve);
+                insertToBookIndexDb(bookKey, JSON.parse(str)).then(() => {
+                    console.log(`Indexing completed for ${bookKey}`);
+                    resolve();
+                });
             });
     });
 };
 
-const closeDb = (bookId) => {
-    let db = dbMap[bookId];
+const closeDb = (bookKey) => {
+    let db = dbMap[bookKey];
     if (db) {
-        delete dbMap[bookId]
+        delete dbMap[bookKey]
         db.close();
     }
 };
 
-const searchBook = (bookId, searchTerm, highlightLength = 100, maxResults = 200) => {
+const searchBook = (bookKey, searchTerm, highlightLength = 100, maxResults = 200) => {
+    const getIndicesOf = (searchStr, str, caseSensitive) => {
+        let searchStrLen = searchStr.length;
+        if (searchStrLen == 0) {
+            return [];
+        }
+        let startIndex = 0, index, indices = [];
+        if (!caseSensitive) {
+            str = str.toLocaleLowerCase('tr-TR');
+            searchStr = searchStr.toLocaleLowerCase('tr-TR');
+        }
+        while ((index = str.indexOf(searchStr, startIndex)) > -1) {
+            indices.push(index);
+            startIndex = index + searchStrLen;
+        }
+        return indices;
+    }
+
     const leadTrailLength = Math.max(20, (highlightLength - searchTerm.length) / 2);
     return new Promise((resolve, reject) => {
-        queryBookIndexDb(bookId, searchTerm, maxResults)
+        queryBookIndexDb(bookKey, searchTerm, maxResults)
             .then(queryResults => {
                 const searchResults = [];
+                let resultIdx = 0;
+
                 for (let i = 0; i < queryResults.rows.length; ++i) {
                     const row = queryResults.rows.item(i);
                     const text = row.text;
+                    const positions = getIndicesOf(searchTerm, text, false);
 
-                    const textLowerCase = text.toLocaleLowerCase('tr-TR')
-                    const searchTermLowerCase = searchTerm.toLocaleLowerCase('tr-TR')
-                    const position = textLowerCase.indexOf(searchTermLowerCase);
+                    positions.forEach(position => {
+                        const cfi = 'epubcfi(' + row.cfi + ':' + position + ')';
 
-                    const cfi = 'epubcfi(' + row.cfi + ':' + position + ')';
+                        const leadDots = position === 0 ? '' : '...';
+                        const trailDots = position + searchTerm.length < text.length ? '' : '...';
+                        const before = leadDots + text.substring(position - leadTrailLength, position);
+                        const after = text.substring(position + searchTerm.length, position + searchTerm.length + leadTrailLength) + trailDots;
+                        const caseProtectedSearchTerm = text.substring(position, position + searchTerm.length);
 
-                    const leadDots = position === 0 ? '' : '...';
-                    const trailDots = position + searchTerm.length < text.length ? '' : '...';
-                    const before = leadDots + text.substring(position - leadTrailLength, position);
-                    const after = text.substring(position + searchTerm.length, position + searchTerm.length + leadTrailLength) + trailDots;
-                    const caseProtectedSearchTerm = text.substring(position, position + searchTerm.length);
-
-                    searchResults.push({id: i.toString(), cfi, before, highlight: caseProtectedSearchTerm, after});
+                        searchResults.push({id: (resultIdx++).toString(), cfi, before, highlight: caseProtectedSearchTerm, after});
+                    });
                 }
                 resolve(searchResults);
             })

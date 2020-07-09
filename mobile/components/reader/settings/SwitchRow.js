@@ -4,7 +4,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {initialMode as initialDarkMode} from 'react-native-dark-mode/dist/initial-mode';
 import {eventEmitter as darkModeEventEmitter} from 'react-native-dark-mode/dist/event-emitter';
 
-import {SettingsRowStyles, colors} from '../../../styles/readerSettings/SettingsRowStyles'
+import {SettingsRowStyles, colors} from './SettingsRowStyles'
 
 const {
     containerInSection,

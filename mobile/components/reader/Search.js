@@ -1,38 +1,28 @@
 import React, {Component} from 'react';
 import {
-    Alert,
+    Alert, AppState,
     FlatList,
     Modal,
     StyleSheet,
-    Text,
-    TextInput,
+    Text, TextInput,
     TouchableHighlight,
-    TouchableOpacity,
     View,
 } from 'react-native';
-import EvilIcons from 'react-native-vector-icons/EvilIcons';
+import LocalizedStrings from 'react-native-localization';
+import {SearchBar} from 'react-native-elements';
+import {initialMode as initialDarkMode, eventEmitter as darkModeEventEmitter} from 'react-native-dark-mode';
 
-import BarButtonStyle from '../../styles/common/BarButtonStyles';
-import {HeaderBarStyles, HeaderBarTitleStyle} from '../../styles/common/HeaderBarStyles';
-import ModalContainerStyle from '../../styles/common/ModalContainerStyles';
-import {TextInputStyle} from '../../styles/common/TextInputStyles';
 import {searchBook} from '../../helpers/EpubIndexer';
+import HeaderBar from '../common/HeaderBar';
 
 const searchDebounceDelay = 500;
-
-String.prototype.format = function() {
-    let a = this;
-    for (let k in arguments) {
-        a = a.replace('{' + k + '}', arguments[k]);
-    }
-    return a;
-};
 
 class Search extends Component {
     constructor(props) {
         super(props);
 
         this.state = {
+            darkMode: initialDarkMode,
             bookKey: props.bookKey,
             error: '',
             modalVisible: false
@@ -40,6 +30,7 @@ class Search extends Component {
     }
 
     componentDidMount() {
+        darkModeEventEmitter.on('currentModeChanged', this._darkModeChangeHandler.bind(this));
         if (this.props.shown) {
             this.show();
         } else {
@@ -57,12 +48,21 @@ class Search extends Component {
         }
     }
 
+    componentWillUnmount() {
+        darkModeEventEmitter.removeListener('currentModeChanged', this._darkModeChangeHandler.bind(this));
+    }
+
     show() {
         this.setState({modalVisible: true});
+
     }
 
     hide() {
         this.setState({modalVisible: false});
+    }
+
+    _darkModeChangeHandler(newMode) {
+        this.setState({darkMode: newMode});
     }
 
     _onPress(item) {
@@ -72,14 +72,19 @@ class Search extends Component {
         this.hide();
     }
 
-    renderRow(row) {
+    _renderRow(item) {
         return (
-            <TouchableHighlight onPress={() => this._onPress(row)}>
-                <View style={styles.row}>
-                    <Text style={styles.title}>
-                        {row.before}
-                        <Text style={styles.titleHighlight}>{row.highlight}</Text>
-                        {row.after}
+            <TouchableHighlight onPress={() => this._onPress(item)}>
+                <View
+                    style={styles.row}
+                    backgroundColor={colors[this.state.darkMode].listItemBackgroundColor}
+                >
+                    <Text style={{...styles.title, color: colors[this.state.darkMode].listItemTitleColor}}>
+                        {item.before}
+                        <Text style={styles.titleHighlight}>
+                            {item.highlight}
+                        </Text>
+                        {item.after}
                     </Text>
                 </View>
             </TouchableHighlight>
@@ -98,7 +103,8 @@ class Search extends Component {
         };
     };
 
-    onChangeText(searchTerm) {
+    _debouncedSearch = this._debounce(this._onChangeText)
+    _onChangeText(searchTerm) {
         if (!searchTerm || searchTerm.length < 3)
             return;
 
@@ -111,40 +117,57 @@ class Search extends Component {
             .catch(error => console.error(error));
     }
 
+    _renderSeparator = () => {
+        return (
+            <View
+                style={{
+                    height: 1,
+                    width: '100%',
+                    backgroundColor: colors[this.state.darkMode].separatorColor,
+                    marginLeft: '0%',
+                }}
+            />
+        );
+    };
+
     render() {
         return (
-            <View style={styles.container}>
+            <View
+                style={styles.container}
+                backgroundColor={colors[this.state.darkMode].containerBackgroundColor}
+            >
                 <Modal
                     animationType={'slide'}
                     visible={this.state.modalVisible}
                 >
-                    <View style={styles.header}>
-                        <TouchableOpacity style={styles.backButton}/>
-                        <Text style={styles.headerTitle}>
-                            Ara
-                        </Text>
-                        <TouchableOpacity
-                            style={styles.backButton}
-                            onPress={() => this.hide()}
-                        >
-                            <EvilIcons name="close" size={34}/>
-                        </TouchableOpacity>
-                    </View>
-                    <TextInput
-                        style={TextInputStyle}
-                        onChangeText={this._debounce(this.onChangeText)}
-                        // value={value}
+                    <HeaderBar
+                        title={strings.title}
+                        alwaysShown={true}
+                        rightIconName={'md-close'}
+                        onRightButtonPressed={() => {
+                            this.hide();
+                        }}
+                    />
+                    <SearchBar
+                        placeholder={strings.searchPlaceHolder}
+                        lightTheme={this.state.darkMode === 'light'}
+                        round={true}
+                        onChangeText={text => {
+                            this.setState({value: text});
+                            this._debouncedSearch(text);
+                        }}
+                        autoCorrect={false}
+                        value={this.state.value}
                     />
                     <FlatList
                         style={styles.container}
                         data={this.state.dataSource}
+                        backgroundColor={colors[this.state.darkMode].containerBackgroundColor}
                         renderItem={row => {
-                            return this.renderRow(row.item);
+                            return this._renderRow(row.item);
                         }}
                         keyExtractor={item => item.id}
-                        ItemSeparatorComponent={() => (
-                            <View style={styles.separator}/>
-                        )}
+                        ItemSeparatorComponent={this._renderSeparator}
                     />
                 </Modal>
             </View>
@@ -152,20 +175,39 @@ class Search extends Component {
     }
 }
 
+let strings = new LocalizedStrings({
+    en:{
+        title: 'Search',
+        searchPlaceHolder: 'Search...',
+    },
+});
+
+const colors = {
+    'dark': {
+        listItemTitleColor: '#fff',
+        listItemBackgroundColor: '#000',
+        containerBackgroundColor: '#000',
+        separatorColor: '#323136',
+    },
+    'light': {
+        listItemTitleColor: '#000',
+        listItemBackgroundColor: '#fff',
+        containerBackgroundColor: '#fff',
+        separatorColor: '#8a898e',
+    }
+};
+
 const styles = StyleSheet.create({
-    container: ModalContainerStyle,
-    headerTitle: HeaderBarTitleStyle,
-    header: HeaderBarStyles(false, true),
-    backButton: BarButtonStyle,
+    container: {
+        flex: 1
+    },
     row: {
         flexDirection: 'row',
         padding: 10,
-        backgroundColor: '#FFFFFF',
         overflow: 'hidden',
     },
     separator: {
         height: 1,
-        backgroundColor: '#CCCCCC'
     },
     title: {
         fontFamily: 'georgia'

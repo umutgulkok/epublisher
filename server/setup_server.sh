@@ -66,6 +66,7 @@ echo 'Edit your Django settings file'
 vi /home/ubuntu/epublisher/server/epublisher/settings/prod.py
 cd /home/ubuntu/epublisher/preprocessor || exit
 npm install
+chmod 701 search.js locations.js
 cd /home/ubuntu/epublisher/server || exit
 pip install -r requirements.txt
 python manage.py migrate

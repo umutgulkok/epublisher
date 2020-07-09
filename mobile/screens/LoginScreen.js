@@ -16,9 +16,9 @@ import AsyncStorage from '@react-native-community/async-storage';
 import DeviceInfo from 'react-native-device-info';
 import { JSHash, CONSTANTS } from "react-native-hash";
 import LocalizedStrings from 'react-native-localization';
+import {StyleSheet} from 'react-native';
 
 import constants from '../constants';
-import {styles, colors} from '../styles/LoginStyles';
 import {joinPath} from '../helpers/Utils';
 import {Platform} from 'react-native';
 
@@ -30,8 +30,8 @@ export default class LoginScreen extends React.Component {
 
         this.state = {
             darkMode: initialDarkMode,
-            email: 'umut.gulkok@gmail.com',
-            password: 'U72068688g',
+            email: '',
+            password: '',
             progress: false,
             modalVisible: false
         };
@@ -207,6 +207,14 @@ export default class LoginScreen extends React.Component {
             });
     }
 
+    resetState = () => {
+        this.setState({
+            email: '',
+            password: '',
+            progress: false
+        });
+    };
+
     render() {
         return (
             <View style={styles.container}>
@@ -290,7 +298,7 @@ export default class LoginScreen extends React.Component {
 }
 
 let strings = new LocalizedStrings({
-    en:{
+    en: {
         login: 'LOG IN',
         register: 'REGISTER',
         forgot: 'Forgot Password',
@@ -305,3 +313,66 @@ let strings = new LocalizedStrings({
             '\nPlease contact the provider if you don\'t have access the other devices'
     },
 });
+
+const colors = {
+    'dark': {
+        textColor: '#eee',
+        textPlaceholderColor: '#008ebe',
+        textBackgroundColor: '#212121',
+        viewBackgroundColor: '#000',
+        loginButtonBackgroundColor: '#a83e3e',
+        signupButtonBackgroundColor: '#005c7c',
+        forgotColor: '#eee'
+    },
+    'light': {
+        textColor: '#111',
+        textPlaceholderColor: '#003f5c',
+        textBackgroundColor: '#eee',
+        viewBackgroundColor: '#fff',
+        loginButtonBackgroundColor: '#fb5b5a',
+        signupButtonBackgroundColor: '#006c9f',
+        forgotColor: '#111'
+    }
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    keyboardAvoidingView: {
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    inputView: {
+        width: '80%',
+        borderRadius: 25,
+        height: 50,
+        marginBottom: 20,
+        justifyContent: 'center',
+        padding: 20,
+        maxWidth: 500
+    },
+    inputText: {
+        height: 50
+    },
+    forgot: {
+        fontSize: 13,
+        marginBottom: 30
+    },
+    loginBtn: {
+        width: '80%',
+        borderRadius: 25,
+        height: 50,
+        alignItems: 'center',
+        justifyContent: 'center',
+        maxWidth: 300,
+        marginTop: 15,
+        marginBottom: 15
+    },
+    loginText: {
+        color: 'white'
+    }
+})
