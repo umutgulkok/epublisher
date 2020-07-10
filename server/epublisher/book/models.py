@@ -30,6 +30,10 @@ class Book(models.Model):
     def save(self, *args, **kwargs):
         if not self.key:
             self.key = uuid.uuid4()
+
+        book_dir = f'{settings.STORAGE_DIR}/{self.key}'
+        os.mkdir(book_dir)
+
         return super().save(*args, **kwargs)
 
     def __str__(self):
