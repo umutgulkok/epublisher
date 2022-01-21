@@ -21,7 +21,7 @@
     "base64-arraybuffer": "^0.2.0",
     "buffer": "^5.5.0",
     "buffer-ponyfill": "^0.1.1",
-    "epubjs": "^0.3.85",
+    "epubjs": "^0.3.89",
     "event-emitter": "^0.3.5",
     "events": "^3.1.0",
     "i": "^0.3.6",
